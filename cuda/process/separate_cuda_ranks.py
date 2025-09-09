@@ -43,12 +43,11 @@ def main():
         print(f"Warning: expected 4 distinct ranks but found {len(ranks)}")
 
     # Split and write
-    for r in ranks:
-        subset = df[df["local_rank"] == r].sort_values("Start (ns)")
-        output_filename = f"{base_name}_local_rank_{r}.csv"
-        output_path = os.path.join(input_dir, output_filename)
-        subset.to_csv(output_path, index=False)
-        print(f"Wrote {len(subset)} rows for local_rank {r} to {output_path}")
+    subset = df[df["local_rank"] == 0].sort_values("Start (ns)")
+    output_filename = f"{base_name}_rank0.csv"
+    output_path = os.path.join(input_dir, output_filename)
+    subset.to_csv(output_path, index=False)
+    print(f"Wrote {len(subset)} rows for rank0 to {output_path}")
 
 if __name__ == "__main__":
     main()

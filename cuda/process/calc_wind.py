@@ -1,7 +1,18 @@
 #!/usr/bin/env python3
 import argparse
 import pandas as pd
+import math
 
+def to_bytes(x):
+    """Convert 'Size(bytes)' which may be float/str/NaN to an int number of bytes."""
+    if x is None or (isinstance(x, float) and math.isnan(x)):
+        return 0
+    try:
+        # Accept float-ish strings and floats; cast to int bytes.
+        return int(float(x))
+    except Exception:
+        return 0
+    
 def main():
     parser = argparse.ArgumentParser(
         description="Calculate DP↔PP switch windows from labeled NCCL trace"
@@ -26,10 +37,18 @@ def main():
     # df['Start (ns)']    = df['Start (ns)'].apply(int)
     # df['Duration (ns)'] = df['Duration (ns)'].apply(int)
 
+    # Assert that rows are sorted by Start (ns)
+    starts = df["Start (ns)"].astype(int).values
+    assert all(starts[i] <= starts[i+1] for i in range(len(starts)-1)), \
+        "Error: rows are not sorted by Start (ns)."
+
     windows = []
     # Initialize with the first row
     prev_type = df.iloc[0]['Parallelism']
     prev_end = int(df.iloc[0]['Start (ns)']) + int(df.iloc[0]['Duration (ns)'])
+
+    size_col = 'Size(bytes)'    
+    group_bytes = to_bytes(df.iloc[0].get(size_col, 0))
 
     # Iterate over subsequent rows
     for _, row in df.iloc[1:].iterrows():
@@ -43,7 +62,7 @@ def main():
             wind_start_ns = prev_end
             wind_end_ns = curr_start
             wind_duration_ns = wind_end_ns - wind_start_ns
-            print(f"{wind_start_ns} - {wind_end_ns}")
+            # print(f"{wind_start_ns} - {wind_end_ns}")
             if wind_end_ns <= wind_start_ns:
                 print(f"Warning: Overlapping window ({window_type})")
                 wind_duration_ns = 0
@@ -53,13 +72,15 @@ def main():
                 'wind_start_ns': wind_start_ns,
                 'wind_end_ns': wind_end_ns,
                 'wind_duration_ns': wind_duration_ns,
-                'kernel_before_bytes': 0,
-                'kernel_after_bytes': 0
+                'parallelism_group_before_wind_aggregate_size(bytes)': group_bytes,
             })
 
             # Update the previous type for next iteration
             prev_type = curr_type
-
+            # Reset for the new group: start counting with THIS row's size
+            group_bytes = to_bytes(row.get(size_col, 0))
+        else:
+            group_bytes += to_bytes(row.get(size_col, 0))
         # Always update prev_end to the latest End (ns)
         prev_end = curr_end
 
