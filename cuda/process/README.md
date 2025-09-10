@@ -22,9 +22,9 @@ Only keep NCCL events -> _rank0.csv (overwrite step1)
 3. label_parallelism.sh/label_parallelism.py
 Reference nvtx trace's TP/DP labeling (based on comm ID), label the cuda GPU trace assuming the same parallelism orders. Populate a Communication Size (bytes) field based on nvtx corresponding kernel's size. PP size: 16777216 bytes -> rank0_labeled.csv
 
-4. remove_tp_na.sh/remove_tp_na.py: remove TP, NA -> rank0_dp_pp.csv
+4. remove_tp_na.sh/remove_tp_na.py: remove TP, NA -> rank0_labeled_dp_pp.csv
 
 ## Per-Rank Window Calculaion
-1. calc_wind.sh/calc_wind.py:calculate per-rank window sizes and aggregarate message size (bytes) for all kernels before a switching window.
-
-2. ipynb for plot: windows cdf + size vs. windows graph
+1. group_parallelism.sh/group_parallelism.py: group all kernels of the same parallelism type to record start, end, duration, start kernel name, end kernel name, total bytes 0 -> rank0_labeled_dp_pp_grouped.csv
+2. calc_wind.sh/calc_wind.py: calculate per-rank window sizes and aggregarate message size (bytes) for all kernels after a switching window. -> node0_rank0_windows.csv
+3. ipynb for plot: windows cdf + size vs. windows graph

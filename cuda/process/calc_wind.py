@@ -48,7 +48,6 @@ def main():
     prev_end = int(df.iloc[0]['Start (ns)']) + int(df.iloc[0]['Duration (ns)'])
 
     size_col = 'Size(bytes)'    
-    group_bytes = to_bytes(df.iloc[0].get(size_col, 0))
 
     # Iterate over subsequent rows
     for _, row in df.iloc[1:].iterrows():
@@ -67,20 +66,19 @@ def main():
                 print(f"Warning: Overlapping window ({window_type})")
                 wind_duration_ns = 0
 
+            after_size_bytes = to_bytes(row.get("Total Size (bytes)", 0))
+
             windows.append({
                 'window_type': window_type,
                 'wind_start_ns': wind_start_ns,
                 'wind_end_ns': wind_end_ns,
                 'wind_duration_ns': wind_duration_ns,
-                'parallelism_group_before_wind_aggregate_size(bytes)': group_bytes,
+                'parallelism_group_after_wind_aggregate_size(bytes)': after_size_bytes,
             })
 
             # Update the previous type for next iteration
             prev_type = curr_type
             # Reset for the new group: start counting with THIS row's size
-            group_bytes = to_bytes(row.get(size_col, 0))
-        else:
-            group_bytes += to_bytes(row.get(size_col, 0))
         # Always update prev_end to the latest End (ns)
         prev_end = curr_end
 
