@@ -11,11 +11,11 @@ def to_int(val):
 def main():
     nodes = [0, 1, 2, 3]
 
-    base_dir = "/global/homes/c/co232/ReCCL-workspace/torchtitan/windows/nsys/cuda/traces"
+    base_dir = "../traces"
 
     dfs = {}
     for node in nodes:
-        path = os.path.join(base_dir, f"node{node}_cuda_gpu_trace_local_rank_0_filtered_labeled_dp_pp_synch_grouped.csv")
+        path = os.path.join(base_dir, f"node{node}_cuda_gpu_trace_rank0_labeled_dp_pp_synch_grouped.csv")
         if not os.path.isfile(path):
             raise FileNotFoundError(f"File not found: {path}")
         df = pd.read_csv(path)
@@ -23,7 +23,7 @@ def main():
         df["Duration (ns)"] = df["Duration (ns)"].apply(to_int)
         dfs[node] = df
 
-    # PP circuits across all 4 nodes 
+    # PP circuits across all 4 nodes: max(4 nodes start) to max(4 nodes end)
     pp_dfs = [dfs[node][dfs[node]["Parallelism"] == "PP"].reset_index(drop=True) for node in nodes]
     pp_counts = [len(df) for df in pp_dfs]
     assert all(c == 102 for c in pp_counts), f"Expected 102 PP kernels per rank, got counts: {pp_counts}"
@@ -40,6 +40,7 @@ def main():
 
         start_ts = max(to_int(row["Start (ns)"]) for row in rows)
         end_ts   = max(to_int(row["Start (ns)"]) + to_int(row["Duration (ns)"]) for row in rows)
+        print(f"    !circuit {start_ts} -> {end_ts}")
         pp_circuits.append({
             "Parallelism": "PP",
             "circuit_start_ts": start_ts,
@@ -48,12 +49,13 @@ def main():
             "circuit_nodes": json.dumps(nodes),
         })
 
-    # DP circuits per pipeline stage (nodes[:2] and nodes[2:])
+    # DP circuits per pipeline stage (nodes[:2] and nodes[2:])L max(2 nodes start) to max(2 nodes end)
     dp_circuits = []
     for group in (nodes[:2], nodes[2:]):
         dp_dfs = [dfs[node][dfs[node]["Parallelism"] == "DP"].reset_index(drop=True) for node in group]
         dp_counts = [len(df) for df in dp_dfs]
         assert all(c == dp_counts[0] for c in dp_counts), f"DP kernel count mismatch in {group}: {dp_counts}"
+
         dp_len = dp_counts[0]
         print(f"DP Kernels Count for {group}: {dp_len}")
 
@@ -68,6 +70,7 @@ def main():
 
             start_ts = max(to_int(row["Start (ns)"]) for row in rows)
             end_ts   = max(to_int(row["Start (ns)"]) + to_int(row["Duration (ns)"]) for row in rows)
+            print(f"    !circuit: {start_ts} -> {end_ts}")
             dp_circuits.append({
                 "Parallelism": "DP",
                 "circuit_start_ts": start_ts,

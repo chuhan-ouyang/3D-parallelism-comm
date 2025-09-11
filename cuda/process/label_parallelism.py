@@ -59,21 +59,18 @@ def main():
     # Determine output path
     dev_path = args.devkernels
     out_path = args.output or os.path.splitext(dev_path)[0] + '_labeled.csv'
-    print("try read nvtx")
     # Read NCCL events
     try:
         df_n = pd.read_csv(args.nvtxevents)
     except Exception as e:
         print(f"Error reading NCCL events file: {e}", file=sys.stderr)
         sys.exit(1)
-    print("finish reading nvtx")
 
     required_nvtx_cols = {'kernel_name', 'Parallelism', 'jsonText'}
     missing = required_nvtx_cols - set(df_n.columns)
     if missing:
         print(f"Error: NVTX CSV missing columns: {sorted(missing)}", file=sys.stderr)
         sys.exit(1)
-    print("checked nvtx")
 
     # Build label and size dictionaries
     ag_map = {}
@@ -94,7 +91,6 @@ def main():
             rs_map[rs_idx] = (par, size)
             rs_idx += 1
         # ignore other nvtx rows
-    print("build ag rs map")
 
     # Read device kernel trace
     try:

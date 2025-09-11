@@ -10,8 +10,8 @@ def decode_global_tid(globalTid: int):
 def main():
     # Example globalTid values
     tids = [
-        300180650918721,
-        300180650919336
+        297434908361718,
+        297434925139527
     ]
 
     for gtid in tids:
