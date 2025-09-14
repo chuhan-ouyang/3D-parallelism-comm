@@ -24,9 +24,7 @@ Base - Other Offset: 586259512 ns
 Wrote synched CSV: ../traces/node3_cuda_gpu_trace_rank0_labeled_dp_pp_synch.csv
 
 #### Group Kernels
-1. group_dp_kernels.sh/group_dp_kernels.py: combine all kernels of the same DP type, record kernel names
-Group consecutive DP kernels; pass PP rows through.
-For calculating OCS circuit, PP rows need to be synched among the 4 ranks, DP ros are synched among 2 ranks of te DP group (04, 812).
+1. group_dp_kernels.sh/group_dp_kernels.py (for each rank): combine all kernels of the same DP type, record kernel names. Aggregate sizes. Group consecutive DP kernels; pass PP rows through. We only group DP kernels because for calculating OCS circuit, PP rows need to be synched among the 4 ranks, DP ros are synched among 2 ranks of te DP group (rank0 and 4, rank 8 and 12).
 
 #### OCS Schedule
 1. calc_ocs_circuit.sh/calc_ocs_circuit.py
@@ -36,6 +34,10 @@ PP circuits calculated across all 4 nodes: max(4 nodes start) to max(4 nodes end
 
 DP circuits calculated per pipeline stage (nodes[:2] and nodes[2:]): max(2 nodes start) to max(2 nodes end)
 
+Circuit's communication size = sum of communication sizes of all participating ranks' kernels
+
+Sort all circuits by end time
+
 #### OCS Per-Rail Window Size
 1. calc_ocs_global_wind.sh/calc_ocs_global_wind.py
-If switch from DP - PP or PP - DP then calcualte window size
+If switch from DP - PP or PP - DP then calcualte window size. Record size of kernel after.
