@@ -23,6 +23,7 @@ def main():
 
     df["Start (ns)"] = df["Start (ns)"].apply(int)
     df["Duration (ns)"] = df["Duration (ns)"].apply(int)
+    df["Size(bytes)"] = df["Size(bytes)"].apply(int)
 
     out_rows = []
     cur_group = None  # only used for DP groups
@@ -32,6 +33,7 @@ def main():
         name = row["Name"]
         s = int(row["Start (ns)"])
         d = int(row["Duration (ns)"])
+        comm_size = int(row["Size(bytes)"])
 
         if p == "DP":
             if cur_group is None:
@@ -40,9 +42,11 @@ def main():
                 cur_group["Duration (ns)"] = d
                 cur_group["Start Name"] = name
                 cur_group["End Name"] = name
+                cur_group["Size(bytes)"] = comm_size
             else:
                 cur_group["Duration (ns)"] += d
                 cur_group["End Name"] = name
+                cur_group["Size(bytes)"] += comm_size # aggregate DP kernels' comm size for grouped kernel
         else:
             if cur_group is not None:
                 out_rows.append(cur_group)
@@ -52,6 +56,7 @@ def main():
             passthrough["Duration (ns)"] = d
             passthrough["Start Name"] = name
             passthrough["End Name"] = name
+            passthrough["Size(bytes)"] = comm_size
             out_rows.append(passthrough)
 
     if cur_group is not None:

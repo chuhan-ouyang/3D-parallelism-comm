@@ -51,12 +51,14 @@ def main():
             wind_start = wind_end
 
         wind_dur = wind_end - wind_start
+        kernel_after_bytes = curr["aggregate_comm_size"]
 
         windows.append({
             "window_type": window_type,
             "wind_start_ts": wind_start,
             "wind_end_ts": wind_end,
             "wind_duration_ns": wind_dur,
+            "kernel_after_bytes": kernel_after_bytes,
         })
 
 

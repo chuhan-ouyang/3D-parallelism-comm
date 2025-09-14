@@ -33,20 +33,29 @@ def main():
     for idx in range(pp_len):
         rows = [df.iloc[idx] for df in pp_dfs]
         print(f"PP circuit {idx}:")
+        comm_sizes = []
+
         for node, row in zip(nodes, rows):
             start_val = to_int(row["Start (ns)"])
             end_val = start_val + to_int(row["Duration (ns)"])
-            print(f"  Node {node}: start={start_val}, end={end_val}")
+            comm_size = to_int(row["Size(bytes)"])
+            comm_sizes.append(comm_size)
+            print(f"  Node {node}: start={start_val}, end={end_val}, comm_size={comm_size}")
+        
+        assert all(comm_size == comm_sizes[0] for comm_size in comm_sizes)
+        total_comm_size = sum(comm_sizes)
 
         start_ts = max(to_int(row["Start (ns)"]) for row in rows)
         end_ts   = max(to_int(row["Start (ns)"]) + to_int(row["Duration (ns)"]) for row in rows)
-        print(f"    !circuit {start_ts} -> {end_ts}")
+        print(f"    !circuit {start_ts} -> {end_ts}, {total_comm_size} bytes")
+
         pp_circuits.append({
             "Parallelism": "PP",
             "circuit_start_ts": start_ts,
             "circuit_end_ts": end_ts,
             "circuit_duration_ns": end_ts - start_ts,
             "circuit_nodes": json.dumps(nodes),
+            "aggregate_comm_size": total_comm_size,
         })
 
     # DP circuits per pipeline stage (nodes[:2] and nodes[2:])L max(2 nodes start) to max(2 nodes end)
@@ -63,20 +72,28 @@ def main():
             rows = [df.iloc[idx] for df in dp_dfs]
 
             print(f"DP circuit {idx} for group {group}:")
+            comm_sizes = []
             for node, row in zip(group, rows):
                 start_val = to_int(row["Start (ns)"])
                 end_val = start_val + to_int(row["Duration (ns)"])
-                print(f"  Node {node}: start={start_val}, end={end_val}")
+                comm_size = to_int(row["Size(bytes)"])
+                comm_sizes.append(comm_size)
+                print(f"  Node {node}: start={start_val}, end={end_val}, comm_size={comm_size}")
+            
+            assert all(comm_size == comm_sizes[0] for comm_size in comm_sizes)
+            total_comm_size = sum(comm_sizes)
 
             start_ts = max(to_int(row["Start (ns)"]) for row in rows)
             end_ts   = max(to_int(row["Start (ns)"]) + to_int(row["Duration (ns)"]) for row in rows)
-            print(f"    !circuit: {start_ts} -> {end_ts}")
+            print(f"    !circuit {start_ts} -> {end_ts}, {total_comm_size} bytes")
+
             dp_circuits.append({
                 "Parallelism": "DP",
                 "circuit_start_ts": start_ts,
                 "circuit_end_ts": end_ts,
                 "circuit_duration_ns": end_ts - start_ts,
                 "circuit_nodes": json.dumps(group),
+                "aggregate_comm_size": total_comm_size,
             })
 
     all_circuits = pd.DataFrame(pp_circuits + dp_circuits).sort_values("circuit_end_ts").reset_index(drop=True)

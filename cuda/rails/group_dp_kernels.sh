@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-NODE0="../traces/node0_cuda_gpu_trace_rank0_labeled_dp_pp.csv"
+NODE0="../traces/node0_cuda_gpu_trace_rank0_labeled_dp_pp_synch.csv"
 NODE1="../traces/node1_cuda_gpu_trace_rank0_labeled_dp_pp_synch.csv"
 NODE2="../traces/node2_cuda_gpu_trace_rank0_labeled_dp_pp_synch.csv"
 NODE3="../traces/node3_cuda_gpu_trace_rank0_labeled_dp_pp_synch.csv"
